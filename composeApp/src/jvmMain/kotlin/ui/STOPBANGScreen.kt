@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.calculateSTOPBANG
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,19 +24,25 @@ fun STOPBANGScreen() {
 
     var result by remember { mutableStateOf<String?>(null) }
 
-    Scaffold { innerPadding ->
+    val clipboard = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         ScrollableScreen(modifier = Modifier.padding(innerPadding)) {
 
-            // 🟦 InfoCard – stručné vysvetlenie
+            // Info – bez zmeny logiky, len centrálna InfoCard
             InfoCard(
                 "STOP-BANG dotazník je jednoduchý skríningový nástroj na odhad rizika obštrukčného spánkového apnoe (OSA). " +
-                        "Názov je akronym pre: Snoring, Tiredness, Observed apnoea, high blood Pressure, BMI > 35, Age > 50, Neck circumference > 40 cm, Gender (male). " +
-                        "Vyššie skóre znamená vyššie riziko stredne ťažkej až ťažkej OSA."
+                        "Názov je akronym pre: Snoring, Tiredness, Observed apnoea, high blood Pressure, BMI > 35, Age > 50, " +
+                        "Neck circumference > 40 cm, Gender (male). Vyššie skóre znamená vyššie riziko stredne ťažkej až ťažkej OSA."
             )
 
             Spacer(Modifier.height(16.dp))
 
-            // 🟦 Položky dotazníka
+            // Položky dotazníka – pôvodné ovládače
             RowItem("Chrápanie", snoring) { snoring = it }
             RowItem("Denná únava", tired) { tired = it }
             RowItem("Pozorované apnoe", observed) { observed = it }
@@ -77,21 +86,16 @@ fun STOPBANGScreen() {
                 Text("Vyhodnotiť")
             }
 
-            result?.let {
+            // Výsledok – jediná zmena: ResultCard + kopírovanie
+            result?.let { r ->
                 Spacer(Modifier.height(16.dp))
-                Surface(
-                    tonalElevation = 2.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+                ResultCard(
+                    text = r,
+                    onCopy = { text ->
+                        clipboard.setText(AnnotatedString(text))
+                        scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
+                    }
+                )
             }
         }
     }

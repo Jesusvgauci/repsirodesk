@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.calculateSPN
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,10 +22,15 @@ fun SPNScreen() {
 
     var result by remember { mutableStateOf<String?>(null) }
 
-    Scaffold { innerPadding ->
+    val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         ScrollableScreen(modifier = Modifier.padding(innerPadding)) {
 
-            // 🟦 InfoCard – vysvetlenie kalkulačky
             InfoCard(
                 "Táto kalkulačka odhaduje pravdepodobnosť malignity solitárneho pľúcneho uzla (SPN) " +
                         "na základe veku, fajčenia, anamnézy malignity, veľkosti uzla, jeho lokalizácie a spikulácie."
@@ -69,21 +77,18 @@ fun SPNScreen() {
                 Text("Vyhodnotiť")
             }
 
-            result?.let {
+            // 🔹 Výsledok cez ResultCard
+            result?.let { r ->
                 Spacer(Modifier.height(16.dp))
-                Surface(
-                    tonalElevation = 2.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+                ResultCard(
+                    text = r,
+                    onCopy = { copied ->
+                        clipboardManager.setText(AnnotatedString(copied))
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Skopírované do schránky")
+                        }
+                    }
+                )
             }
         }
     }

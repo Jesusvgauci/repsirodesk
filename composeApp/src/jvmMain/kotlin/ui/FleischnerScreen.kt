@@ -3,11 +3,15 @@ package ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.*
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import androidx.compose.ui.Alignment
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +36,13 @@ fun FleischnerScreen() {
 
     val types = listOf("solid", "ground-glass", "part-solid")
 
-    Scaffold { innerPadding ->
+    val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         ScrollableScreen(modifier = Modifier.padding(innerPadding)) {
             InfoCard(
                 "Fleischner odporúčania (2017) platia pre incidentálne noduly na CT (nie skríning, nie ≤35 r., nie imunosupresia)."
@@ -163,24 +173,25 @@ fun FleischnerScreen() {
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Vyhodnotiť") }
 
+            // 🔹 Výsledok cez ResultCard
             result?.let { rec ->
                 Spacer(Modifier.height(16.dp))
-                Surface(
-                    tonalElevation = 2.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Odporúčanie:", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
-                        Text(rec, style = MaterialTheme.typography.bodyLarge)
-                        if (notes.isNotEmpty()) {
-                            Spacer(Modifier.height(12.dp))
-                            notes.forEach { n -> Text("• $n") }
-                        }
+
+                val output = buildString {
+                    appendLine("Odporúčanie: $rec")
+                    if (notes.isNotEmpty()) {
+                        appendLine()
+                        notes.forEach { n -> appendLine("• $n") }
                     }
                 }
+
+                ResultCard(
+                    text = output,
+                    onCopy = { copied ->
+                        clipboardManager.setText(AnnotatedString(copied))
+                        scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
+                    }
+                )
             }
         }
     }

@@ -66,19 +66,27 @@ fun AppScaffold(
 }
 
 @Composable
-fun InfoCard(text: String) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F0FA)),
-        shape = RoundedCornerShape(Dimens.cornerRadius),
-        modifier = Modifier.fillMaxWidth()
+fun InfoCard(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,   // 🔹 namiesto surfaceVariant
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = 2.dp
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(Dimens.cardPadding),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer, // 🔹 text ladí s témou
+            modifier = Modifier.padding(16.dp)
         )
     }
 }
+
 
 @Composable
 fun SectionCard(title: String? = null, content: @Composable ColumnScope.() -> Unit) {
@@ -99,6 +107,44 @@ fun SectionCard(title: String? = null, content: @Composable ColumnScope.() -> Un
                 )
             }
             content()
+        }
+    }
+}
+@Composable
+fun ResultCard(
+    text: String,
+    modifier: Modifier = Modifier,
+    onCopy: (String) -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.weight(1f)
+            )
+
+            IconButton(onClick = { onCopy(text) }) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = "Copy result",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
     }
 }

@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.convertSteroid
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,16 +41,20 @@ fun SteroidScreen() {
         unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurface
     )
 
-    Scaffold { innerPadding ->
+    val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         ScrollableScreen(modifier = Modifier.padding(innerPadding)) {
 
-            // 🟦 InfoCard – stručné vysvetlenie
             InfoCard(
                 text = "Kalkulačka na prepočet ekvivalentných dávok systémových kortikosteroidov. " +
                         "Výsledky sú orientačné – vždy zohľadni klinický stav pacienta."
             )
 
-            // 🟦 Vstupný liek
             ExposedDropdownMenuBox(
                 expanded = inputExpanded,
                 onExpandedChange = { inputExpanded = !inputExpanded }
@@ -80,7 +87,6 @@ fun SteroidScreen() {
                 }
             }
 
-            // 🟦 Dávka
             OutlinedTextField(
                 value = inputDose,
                 onValueChange = { inputDose = it },
@@ -88,7 +94,6 @@ fun SteroidScreen() {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // 🟦 Cieľový liek
             ExposedDropdownMenuBox(
                 expanded = outputExpanded,
                 onExpandedChange = { outputExpanded = !outputExpanded }
@@ -121,7 +126,6 @@ fun SteroidScreen() {
                 }
             }
 
-            // 🟦 Akcia
             Button(
                 onClick = {
                     val dose = inputDose.toDoubleOrNull()
@@ -137,22 +141,18 @@ fun SteroidScreen() {
                 Text("Prepočítať")
             }
 
-            // 🟦 Výsledok
-            result?.let {
+            // 🔹 Výsledok cez ResultCard
+            result?.let { r ->
                 Spacer(Modifier.height(16.dp))
-                Surface(
-                    tonalElevation = 2.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+                ResultCard(
+                    text = r,
+                    onCopy = { copied ->
+                        clipboardManager.setText(AnnotatedString(copied))
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Skopírované do schránky")
+                        }
+                    }
+                )
             }
         }
     }

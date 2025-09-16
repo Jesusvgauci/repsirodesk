@@ -1,7 +1,5 @@
 package ui
 
-
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -122,10 +120,10 @@ fun EvaluationScreen(
 
                     if (zscoreResult.isNotEmpty()) {
                         Spacer(Modifier.height(12.dp))
-                        CopyableResultCard(
+                        ResultCard(
                             text = zscoreResult,
-                            onCopy = {
-                                clipboard.setText(AnnotatedString(zscoreResult))
+                            onCopy = { copied ->
+                                clipboard.setText(AnnotatedString(copied))
                                 scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
                             }
                         )
@@ -149,10 +147,10 @@ fun EvaluationScreen(
 
                     if (percentResult.isNotEmpty()) {
                         Spacer(Modifier.height(12.dp))
-                        CopyableResultCard(
+                        ResultCard(
                             text = percentResult,
-                            onCopy = {
-                                clipboard.setText(AnnotatedString(percentResult))
+                            onCopy = { copied ->
+                                clipboard.setText(AnnotatedString(copied))
                                 scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
                             }
                         )
@@ -210,38 +208,15 @@ fun EvaluationScreen(
                 val textToShow = if (useBd2022) bd2022 else bd2005
                 if (textToShow.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
-                    CopyableResultCard(
+                    ResultCard(
                         text = textToShow,
-                        onCopy = {
-                            clipboard.setText(AnnotatedString(textToShow))
+                        onCopy = { copied ->
+                            clipboard.setText(AnnotatedString(copied))
                             scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
                         }
                     )
                 }
             }
-        }
-    }
-}
-
-/** Jednotná kartička na zobrazenie výsledku + tlačidlo kopírovania. */
-@Composable
-private fun CopyableResultCard(
-    text: String,
-    onCopy: () -> Unit
-) {
-    val colors = MaterialTheme.colorScheme
-    Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = colors.primaryContainer,
-        tonalElevation = 3.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(text, color = colors.onPrimaryContainer)
-            IconButton(
-                onClick = onCopy,
-                modifier = Modifier.align(Alignment.End)
-            ) { Icon(Icons.Filled.ContentCopy, contentDescription = "Skopírovať") }
         }
     }
 }

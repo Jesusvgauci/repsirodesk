@@ -9,8 +9,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.Tnm9Engine
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +43,14 @@ fun Tnm9Screen() {
         "10R","10L","11R","11L","12R","12L"
     )
 
-    Scaffold { innerPadding ->
+    // 🔹 pre kopírovanie + snackbar
+    val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize() // ✅ Fix Infinity height
@@ -100,14 +110,13 @@ fun Tnm9Screen() {
 
             Spacer(Modifier.height(8.dp))
 
-            // Výber uzlinových staníc – teraz bez pevnej výšky, aby scrollovala celá stránka
             // Výber uzlinových staníc – fix pre infinity height
             Text("Vyber postihnuté uzlinové stanice", style = MaterialTheme.typography.titleSmall)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 300.dp), // ✅ dôležité pre Compose layout!
+                    .heightIn(max = 300.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -130,7 +139,6 @@ fun Tnm9Screen() {
                     )
                 }
             }
-
 
             Spacer(Modifier.height(12.dp))
 
@@ -183,22 +191,22 @@ fun Tnm9Screen() {
                 Text("Vypočítať TNM a štádium")
             }
 
+            // 🔹 Výsledok – JEDINÁ UI zmena: ResultCard + kopírovanie
             result?.let { r ->
                 Spacer(Modifier.height(16.dp))
-                Surface(
-                    tonalElevation = 2.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text("Výsledok", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
-                        Text("TNM: ${r.lineTNM()}", style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.height(4.dp))
-                        Text("Klinické štádium: ${r.clinicalStage()}", style = MaterialTheme.typography.titleLarge)
-                    }
+
+                val output = buildString {
+                    appendLine("TNM: ${r.lineTNM()}")
+                    appendLine("Klinické štádium: ${r.clinicalStage()}")
                 }
+
+                ResultCard(
+                    text = output,
+                    onCopy = { copied ->
+                        clipboardManager.setText(AnnotatedString(copied))
+                        scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
+                    }
+                )
             }
         }
     }

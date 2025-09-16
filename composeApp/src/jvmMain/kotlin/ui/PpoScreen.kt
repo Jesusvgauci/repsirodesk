@@ -3,8 +3,6 @@ package ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -259,27 +257,16 @@ fun PpoScreen(snackbarHostState: SnackbarHostState) {
             modifier = Modifier.fillMaxWidth()
         ) { Text("Prepočítať") }
 
+        // 🔹 Výsledok cez ResultCard namiesto Surface
         if (result.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                tonalElevation = 3.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(result, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    IconButton(
-                        onClick = {
-                            clipboard.setText(AnnotatedString(result))
-                            scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Icon(Icons.Filled.ContentCopy, contentDescription = "Skopírovať")
-                    }
+            ResultCard(
+                text = result,
+                onCopy = { copied ->
+                    clipboard.setText(AnnotatedString(copied))
+                    scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
                 }
-            }
+            )
         }
 
         Spacer(Modifier.height(24.dp))

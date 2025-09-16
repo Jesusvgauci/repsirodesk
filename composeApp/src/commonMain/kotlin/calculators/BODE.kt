@@ -1,11 +1,9 @@
 package calculators
-
 data class BODEResult(
     val score: Int,
     val mortalityRisk: String,
     val details: List<String>
 )
-
 /**
  * Výpočet BODE indexu podľa BMI, FEV1 (% predikcie), mMRC skóre a 6MWD (m).
  * Body:
@@ -17,12 +15,10 @@ data class BODEResult(
 fun calculateBODE(bmi: Double, fev1: Double, mmrc: Int, sixMinuteWalk: Int): BODEResult {
     var score = 0
     val details = mutableListOf<String>()
-
     // BMI
     val bmiPoints = if (bmi < 21.0) 1 else 0
     score += bmiPoints
     details.add("BMI: $bmi → $bmiPoints b.")
-
     // FEV1
     val fevPoints = when {
         fev1 >= 65 -> 0
@@ -32,7 +28,6 @@ fun calculateBODE(bmi: Double, fev1: Double, mmrc: Int, sixMinuteWalk: Int): BOD
     }
     score += fevPoints
     details.add("FEV₁ %: $fev1 → $fevPoints b.")
-
     // mMRC
     val mmrcPoints = when (mmrc) {
         0, 1 -> 0
@@ -43,7 +38,6 @@ fun calculateBODE(bmi: Double, fev1: Double, mmrc: Int, sixMinuteWalk: Int): BOD
     }
     score += mmrcPoints
     details.add("mMRC: $mmrc → $mmrcPoints b.")
-
     // 6MWD
     val walkPoints = when {
         sixMinuteWalk >= 350 -> 0
@@ -53,7 +47,6 @@ fun calculateBODE(bmi: Double, fev1: Double, mmrc: Int, sixMinuteWalk: Int): BOD
     }
     score += walkPoints
     details.add("6MWD: $sixMinuteWalk m → $walkPoints b.")
-
     // Riziko mortality (len orientačne)
     val risk = when {
         score <= 2 -> "Nízke riziko"
@@ -61,6 +54,5 @@ fun calculateBODE(bmi: Double, fev1: Double, mmrc: Int, sixMinuteWalk: Int): BOD
         score in 5..6 -> "Vyššie riziko"
         else -> "Vysoké riziko"
     }
-
     return BODEResult(score, risk, details)
 }

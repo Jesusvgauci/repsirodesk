@@ -3,11 +3,8 @@ package ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -36,7 +33,9 @@ fun DlcoHbScreen(snackbarHostState: SnackbarHostState) {
     ) {
         Text("DLCO – korekcia podľa Hb", style = MaterialTheme.typography.titleLarge)
 
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             FilterChip(
                 selected = isMale,
                 onClick = { isMale = true },
@@ -98,26 +97,16 @@ fun DlcoHbScreen(snackbarHostState: SnackbarHostState) {
             )
         ) { Text("Prepočítať") }
 
+        // 🔹 Výsledok cez ResultCard
         if (result.isNotEmpty()) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                tonalElevation = 3.dp
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(result, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                    IconButton(
-                        onClick = {
-                            clipboard.setText(AnnotatedString(result))
-                            scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ) { Icon(Icons.Default.ContentCopy, contentDescription = "Skopírovať") }
+            ResultCard(
+                text = result,
+                onCopy = { copied ->
+                    clipboard.setText(AnnotatedString(copied))
+                    scope.launch { snackbarHostState.showSnackbar("Skopírované do schránky") }
                 }
-            }
+            )
         }
-
 
         Text(
             "Pozn.: DLCO_corr = DLCO_meas × (Hb_ref / (Hb_g/L ÷ 10)); Hb_ref: 14.6 g/dL (muž), 13.4 g/dL (žena). " +

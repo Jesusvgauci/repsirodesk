@@ -80,7 +80,7 @@ fun main() = application {
                                         Icon(
                                             imageVector = Icons.Filled.ArrowBack,
                                             contentDescription = "Späť",
-                                            tint = MaterialTheme.colorScheme.onPrimary
+                                            tint = Color.White // kontrastná farba pre ikonu
                                         )
                                     }
                                 }
@@ -99,7 +99,7 @@ fun main() = application {
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 1.sp
                                         ),
-                                        color = Color.Black
+                                        color = Color.White // biely text
                                     )
                                     Text(
                                         text = "Desk",
@@ -107,12 +107,13 @@ fun main() = application {
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 1.sp
                                         ),
-                                        color = MaterialTheme.colorScheme.primary
+                                        color = Color(0xFFB2EBF2) // svetlo tyrkysový akcent
                                     )
                                 }
                             },
                             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = Color(0xFF00ACC1), // sýta tyrkysová
+                                titleContentColor = Color.White
                             )
                         )
                     },

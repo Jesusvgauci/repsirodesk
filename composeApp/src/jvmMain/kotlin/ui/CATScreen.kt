@@ -1,111 +1,92 @@
 package ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.calculateCAT
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CATScreen() {
-    val answers = remember { mutableStateListOf(0, 0, 0, 0, 0, 0, 0, 0) }
-    var result by remember { mutableStateOf<String?>(null) }
-
     val questions = listOf(
         "Kašeľ",
-        "Množstvo hlienu",
+        "Vykašliavanie hlienu",
         "Tlak na hrudníku",
-        "Dýchavičnosť pri stúpaní do kopca alebo schodov",
+        "Dýchavičnosť pri chôdzi do kopca / po schodoch",
         "Obmedzenie aktivít doma",
-        "Pocit istoty pri odchode z domu",
+        "Istota pri odchode z domu",
         "Kvalita spánku",
         "Energia"
     )
 
-    Scaffold { innerPadding ->
-        ScrollableScreen(modifier = Modifier.padding(innerPadding)) {
+    val answers = remember { mutableStateListOf(*Array(8) { 0 }) }
+    var resultText by remember { mutableStateOf("") }
 
-            // 🟦 InfoCard – stručné vysvetlenie
+    val clipboardManager = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // InfoCard ostáva podľa pôvodného kódu
             InfoCard(
-                "CAT (COPD Assessment Test) je 8-položkový dotazník (0–5 bodov na položku) " +
-                        "hodnotiaci symptómy a vplyv CHOCHP na kvalitu života. Vyššie skóre = vyšší dopad ochorenia."
+                text = "COPD Assessment Test (CAT) je jednoduchý dotazník určený na posúdenie závažnosti symptómov CHOCHP. " +
+                        "Skóre 0–10 = nízke symptómy, 11–20 = stredné, 21–30 = vysoké, 31–40 = veľmi vysoké."
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // 🟦 Otázky so slidermi
-            questions.forEachIndexed { index, q ->
-                Text(q, style = MaterialTheme.typography.bodyLarge)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            questions.forEachIndexed { index, question ->
+                Column {
+                    Text(question, style = MaterialTheme.typography.bodyLarge)
                     Slider(
                         value = answers[index].toFloat(),
-                        onValueChange = { newValue -> answers[index] = newValue.toInt() },
+                        onValueChange = { answers[index] = it.toInt() },
                         valueRange = 0f..5f,
-                        steps = 4,
-                        colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.primary,
-                            activeTrackColor = MaterialTheme.colorScheme.primary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                            activeTickColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            inactiveTickColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                        ),
-                        modifier = Modifier.weight(1f)
+                        steps = 4
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("${answers[index]}")
+                    Text("Hodnota: ${answers[index]}")
                 }
-
-                // číselná os 0–5 pod sliderom
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    (0..5).forEach { number ->
-                        Text(text = number.toString(), style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
-
-            Spacer(Modifier.height(12.dp))
 
             Button(
                 onClick = {
-                    val res = calculateCAT(answers)
-                    result = "Skóre: ${res.total}\n${res.impact}"
+                    val score = calculateCAT(answers) // 🔹 späť na pôvodný názov
+                    resultText = "CAT skóre: $score"
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Vyhodnotiť")
             }
 
-            // 🟦 Výsledok v modrom boxe
-            result?.let {
-                Spacer(modifier = Modifier.height(16.dp))
-                Surface(
-                    tonalElevation = 2.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+            // Výsledok cez ResultCard (jediná UI zmena)
+            if (resultText.isNotEmpty()) {
+                ResultCard(
+                    text = resultText,
+                    onCopy = { copied ->
+                        clipboardManager.setText(AnnotatedString(copied))
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Skopírované do schránky")
+                        }
                     }
-                }
+                )
             }
         }
     }
