@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     jvm()
-    
+
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         outputModuleName.set("composeApp")
@@ -31,7 +31,7 @@ kotlin {
         }
         binaries.executable()
     }
-    
+
     sourceSets {
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -44,7 +44,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.materialIconsExtended)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
-
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -53,19 +52,18 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
             implementation("org.jetbrains.compose.ui:ui-desktop:1.8.2")
-
         }
     }
 }
 
-
 compose.desktop {
     application {
-        mainClass = "org.example.project.MainKt"
+        // ⚠️ Tu je opravená mainClass podľa tvojho balíka
+        mainClass = "org.example.pneumocalc.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.example.project"
+            packageName = "PneumoCalc"
             packageVersion = "1.0.0"
         }
     }

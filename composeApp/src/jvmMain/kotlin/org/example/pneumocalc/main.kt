@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -21,6 +21,7 @@ import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import ui.*
 
 enum class MainSection(val title: String) {
@@ -29,7 +30,7 @@ enum class MainSection(val title: String) {
     FUNKCNE("Funkčné vyšetrenia pľúc")
 }
 
-// Globálny zoznam obrazoviek (bez Scaffold)
+// Globálny zoznam obrazoviek pre kalkulačky/dotazníky
 private val screenRegistry: Map<Class<out Screen>, @Composable (Screen, (Screen) -> Unit) -> Unit> =
     mapOf(
         Screen.Home::class.java to { _, navigate -> HomeScreen(onNavigate = navigate) },
@@ -58,48 +59,94 @@ fun main() = application {
     val snackbarHostState = remember { SnackbarHostState() }
     val evaluationViewModel = remember { EvaluationViewModel() }
 
+    // Ikona okna – bezpečne načítaná z resources
+    val windowIconPainter = remember {
+        runCatching { useResource("logo.png", ::loadImageBitmap) }.getOrNull()
+            ?.let { BitmapPainter(it) }
+    }
+
     Window(
         onCloseRequest = ::exitApplication,
-        title = "", // 🔹 prázdny string = žiadny text v lište
-        icon = null // 🔹 žiadna ikona v ľavom hornom rohu
+        title = "RespiroDesk",
+        icon = windowIconPainter
     ) {
         PneumoTheme {
-            Surface(color = MaterialTheme.colorScheme.background) { // zjednotí farbu pozadia aj s title barom
+            Surface(color = MaterialTheme.colorScheme.background) {
                 Scaffold(
                     topBar = {
+                        var menuExpanded by remember { mutableStateOf(false) }
+
                         CenterAlignedTopAppBar(
+                            // 🔹 NAVIGATION (ĽAVÁ STRANA): späť + hamburger
                             navigationIcon = {
-                                if (currentScreen != null || functionalSubscreen != null) {
-                                    IconButton(onClick = {
-                                        if (functionalSubscreen != null) {
-                                            functionalSubscreen = null
-                                        } else {
-                                            currentScreen = null
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                    // Späť (iba ak je kam ísť späť)
+                                    if (currentScreen != null || functionalSubscreen != null) {
+                                        IconButton(onClick = {
+                                            when {
+                                                functionalSubscreen != null -> functionalSubscreen = null
+                                                else -> currentScreen = null
+                                            }
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Filled.ArrowBack,
+                                                contentDescription = "Späť",
+                                                tint = Color.White
+                                            )
                                         }
-                                    }) {
-                                        Icon(
-                                            imageVector = Icons.Filled.ArrowBack,
-                                            contentDescription = "Späť",
-                                            tint = Color.White // kontrastná farba pre ikonu
-                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                    }
+
+                                    // Hamburger menu (sekcie)
+                                    Box {
+                                        IconButton(onClick = { menuExpanded = true }) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Menu,
+                                                contentDescription = "Menu",
+                                                tint = Color.White
+                                            )
+                                        }
+                                        DropdownMenu(
+                                            expanded = menuExpanded,
+                                            onDismissRequest = { menuExpanded = false }
+                                        ) {
+                                            MainSection.values().forEach { sec ->
+                                                DropdownMenuItem(
+                                                    text = { Text(sec.title) },
+                                                    onClick = {
+                                                        currentSection = sec
+                                                        currentScreen = null
+                                                        functionalSubscreen = null
+                                                        menuExpanded = false
+                                                    }
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             },
+
                             title = {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Image(
-                                        bitmap = useResource("logo.png", ::loadImageBitmap),
-                                        contentDescription = "Logo",
-                                        modifier = Modifier.size(70.dp)
-                                    )
-                                    Spacer(Modifier.width(8.dp))
+                                    val topBarLogo = remember {
+                                        runCatching { useResource("logo.png", ::loadImageBitmap) }.getOrNull()
+                                    }
+                                    if (topBarLogo != null) {
+                                        Image(
+                                            bitmap = topBarLogo,
+                                            contentDescription = "Logo",
+                                            modifier = Modifier.size(70.dp)
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                    }
                                     Text(
                                         text = "Respiro",
                                         style = MaterialTheme.typography.titleLarge.copy(
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 1.sp
                                         ),
-                                        color = Color.White // biely text
+                                        color = Color.White
                                     )
                                     Text(
                                         text = "Desk",
@@ -107,12 +154,15 @@ fun main() = application {
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 1.sp
                                         ),
-                                        color = Color(0xFFB2EBF2) // svetlo tyrkysový akcent
+                                        color = Color(0xFFB2EBF2)
                                     )
                                 }
                             },
+
+                            // Pravá strana nechávame prázdnu
+                            actions = {},
                             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = Color(0xFF00ACC1), // sýta tyrkysová
+                                containerColor = Color(0xFF00ACC1),
                                 titleContentColor = Color.White
                             )
                         )
@@ -126,31 +176,6 @@ fun main() = application {
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // Horné menu
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            MainSection.values().forEach { sec ->
-                                FilterChip(
-                                    selected = currentSection == sec,
-                                    onClick = {
-                                        currentSection = sec
-                                        currentScreen = null
-                                        functionalSubscreen = null
-                                    },
-                                    label = { Text(sec.title) },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                        selectedLabelColor = Color.White,
-                                        containerColor = MaterialTheme.colorScheme.surface,
-                                        labelColor = MaterialTheme.colorScheme.onSurface
-                                    )
-                                )
-                            }
-                        }
-
                         // Obsah podľa sekcie
                         when (currentSection) {
                             MainSection.KALKULATORY -> {
@@ -163,15 +188,9 @@ fun main() = application {
                                     }
                                 }
                             }
-
                             MainSection.AMBULANTNE -> {
-                                Text(
-                                    "Tu budú ambulantné vyšetrenia",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                AnamnezaScreen(snackbarHostState = snackbarHostState)
                             }
-
                             MainSection.FUNKCNE -> {
                                 if (functionalSubscreen == null) {
                                     LazyColumn(

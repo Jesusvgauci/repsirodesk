@@ -45,12 +45,12 @@ fun FleischnerScreen() {
     ) { innerPadding ->
         ScrollableScreen(modifier = Modifier.padding(innerPadding)) {
             InfoCard(
-                "Fleischner odporúčania (2017) platia pre incidentálne noduly na CT (nie skríning, nie ≤35 r., nie imunosupresia)."
+                "Fleischner odporúčania (2017) platia pre incidentálne noduly na CT (nie skríning, nie ≤35 r., nie pri imunosupresii a známej malignite)."
             )
 
             Spacer(Modifier.height(8.dp))
             InfoCard(
-                "Meranie nodulu: dlhá + krátka os na tom istom reze, priemer = (d+ k)/2, celé mm, tenké rezy ≤1.5 mm."
+                "Nodulus sa meria sprývnym spôsobom tak že sa zoberie krátka os a dlhá na tom istom reze a vytvorrí sa z toho priemer, spikuly sa sa do dĺžky pri meraní nerátajú"
             )
 
             Spacer(Modifier.height(12.dp))
