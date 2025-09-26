@@ -6,23 +6,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.res.useResource
-import kotlinx.browser.document
-import org.jetbrains.compose.web.renderComposable
 import ui.*
+
+// multiplatform imports
+import org.jetbrains.compose.web.renderComposable
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
 
 enum class MainSection(val title: String) {
     AMBULANTNE("Ambulantné vyšetrenia"),
@@ -51,132 +50,131 @@ private val screenRegistry: Map<Class<out Screen>, @Composable (Screen, (Screen)
     )
 
 @OptIn(ExperimentalMaterial3Api::class)
-fun main() {
-    renderComposable(rootElementId = "root") {
-        var currentSection by remember { mutableStateOf(MainSection.KALKULATORY) }
-        var currentScreen by remember { mutableStateOf<Screen?>(null) }
-        var functionalSubscreen by remember { mutableStateOf<String?>(null) }
-        val snackbarHostState = remember { SnackbarHostState() }
-        val evaluationViewModel = remember { EvaluationViewModel() }
+@Composable
+fun App() {
+    var currentSection by remember { mutableStateOf(MainSection.KALKULATORY) }
+    var currentScreen by remember { mutableStateOf<Screen?>(null) }
+    var functionalSubscreen by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val evaluationViewModel = remember { EvaluationViewModel() }
 
-        PneumoTheme {
-            Surface(color = MaterialTheme.colorScheme.background) {
-                Scaffold(
-                    topBar = {
-                        var menuExpanded by remember { mutableStateOf(false) }
+    PneumoTheme {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            Scaffold(
+                topBar = {
+                    var menuExpanded by remember { mutableStateOf(false) }
 
-                        CenterAlignedTopAppBar(
-                            navigationIcon = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (currentScreen != null || functionalSubscreen != null) {
-                                        IconButton(onClick = {
-                                            when {
-                                                functionalSubscreen != null -> functionalSubscreen = null
-                                                else -> currentScreen = null
-                                            }
-                                        }) {
-                                            Icon(
-                                                imageVector = Icons.Filled.ArrowBack,
-                                                contentDescription = "Späť",
-                                                tint = Color.White
-                                            )
+                    CenterAlignedTopAppBar(
+                        navigationIcon = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (currentScreen != null || functionalSubscreen != null) {
+                                    IconButton(onClick = {
+                                        when {
+                                            functionalSubscreen != null -> functionalSubscreen = null
+                                            else -> currentScreen = null
                                         }
-                                        Spacer(Modifier.width(4.dp))
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Späť",
+                                            tint = Color.White
+                                        )
                                     }
+                                    Spacer(Modifier.width(4.dp))
+                                }
 
-                                    Box {
-                                        IconButton(onClick = { menuExpanded = true }) {
-                                            Icon(
-                                                imageVector = Icons.Filled.Menu,
-                                                contentDescription = "Menu",
-                                                tint = Color.White
-                                            )
-                                        }
-                                        DropdownMenu(
-                                            expanded = menuExpanded,
-                                            onDismissRequest = { menuExpanded = false }
-                                        ) {
-                                            MainSection.values().forEach { sec ->
-                                                DropdownMenuItem(
-                                                    text = { Text(sec.title) },
-                                                    onClick = {
-                                                        currentSection = sec
-                                                        currentScreen = null
-                                                        functionalSubscreen = null
-                                                        menuExpanded = false
-                                                    }
-                                                )
-                                            }
-                                        }
+                                Box {
+                                    IconButton(onClick = { menuExpanded = true }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Menu,
+                                            contentDescription = "Menu",
+                                            tint = Color.White
+                                        )
                                     }
-                                }
-                            },
-                            title = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Respiro",
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            letterSpacing = 1.sp
-                                        ),
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = "Desk",
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            letterSpacing = 1.sp
-                                        ),
-                                        color = Color(0xFFB2EBF2)
-                                    )
-                                }
-                            },
-                            actions = {},
-                            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = Color(0xFF00ACC1),
-                                titleContentColor = Color.White
-                            )
-                        )
-                    },
-                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-                ) { padding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        when (currentSection) {
-                            MainSection.KALKULATORY -> {
-                                if (currentScreen == null) {
-                                    CalculatorList { selected -> currentScreen = selected }
-                                } else {
-                                    val renderer = screenRegistry[currentScreen!!::class.java]
-                                    renderer?.invoke(currentScreen!!) {
-                                        currentScreen = null
-                                    }
-                                }
-                            }
-                            MainSection.AMBULANTNE -> {
-                                AnamnezaScreen(snackbarHostState = snackbarHostState)
-                            }
-                            MainSection.FUNKCNE -> {
-                                if (functionalSubscreen == null) {
-                                    LazyColumn(
-                                        modifier = Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    DropdownMenu(
+                                        expanded = menuExpanded,
+                                        onDismissRequest = { menuExpanded = false }
                                     ) {
-                                        item { FunctionalCard("Interpretácia funkčných vyšetrení") { functionalSubscreen = "EVAL" } }
-                                        item { FunctionalCard("Korekcia difúzie podľa hemoglobínu") { functionalSubscreen = "DLCO" } }
-                                        item { FunctionalCard("Predikcia pooperačnej funkcie") { functionalSubscreen = "PPO" } }
+                                        MainSection.values().forEach { sec ->
+                                            DropdownMenuItem(
+                                                text = { Text(sec.title) },
+                                                onClick = {
+                                                    currentSection = sec
+                                                    currentScreen = null
+                                                    functionalSubscreen = null
+                                                    menuExpanded = false
+                                                }
+                                            )
+                                        }
                                     }
-                                } else {
-                                    when (functionalSubscreen) {
-                                        "EVAL" -> EvaluationScreen(viewModel = evaluationViewModel, snackbarHostState = snackbarHostState)
-                                        "DLCO" -> DlcoHbScreen(snackbarHostState = snackbarHostState)
-                                        "PPO"  -> PpoScreen(snackbarHostState = snackbarHostState)
-                                    }
+                                }
+                            }
+                        },
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Respiro",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.sp
+                                    ),
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "Desk",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.sp
+                                    ),
+                                    color = Color(0xFFB2EBF2)
+                                )
+                            }
+                        },
+                        actions = {},
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = Color(0xFF00ACC1),
+                            titleContentColor = Color.White
+                        )
+                    )
+                },
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            ) { padding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    when (currentSection) {
+                        MainSection.KALKULATORY -> {
+                            if (currentScreen == null) {
+                                CalculatorList { selected -> currentScreen = selected }
+                            } else {
+                                val renderer = screenRegistry[currentScreen!!::class.java]
+                                renderer?.invoke(currentScreen!!) {
+                                    currentScreen = null
+                                }
+                            }
+                        }
+                        MainSection.AMBULANTNE -> {
+                            AnamnezaScreen(snackbarHostState = snackbarHostState)
+                        }
+                        MainSection.FUNKCNE -> {
+                            if (functionalSubscreen == null) {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    item { FunctionalCard("Interpretácia funkčných vyšetrení") { functionalSubscreen = "EVAL" } }
+                                    item { FunctionalCard("Korekcia difúzie podľa hemoglobínu") { functionalSubscreen = "DLCO" } }
+                                    item { FunctionalCard("Predikcia pooperačnej funkcie") { functionalSubscreen = "PPO" } }
+                                }
+                            } else {
+                                when (functionalSubscreen) {
+                                    "EVAL" -> EvaluationScreen(viewModel = evaluationViewModel, snackbarHostState = snackbarHostState)
+                                    "DLCO" -> DlcoHbScreen(snackbarHostState = snackbarHostState)
+                                    "PPO"  -> PpoScreen(snackbarHostState = snackbarHostState)
                                 }
                             }
                         }
@@ -210,3 +208,20 @@ fun FunctionalCard(label: String, onClick: () -> Unit) {
         )
     }
 }
+
+// entrypoint pre JVM (desktop)
+fun main() = application {
+    Window(onCloseRequest = ::exitApplication, title = "RespiroDesk") {
+        App()
+    }
+}
+
+// entrypoint pre WASM (web)
+// odkomentuj ak buildíš na web
+/*
+fun main() {
+    renderComposable(rootElementId = "root") {
+        App()
+    }
+}
+*/
