@@ -14,21 +14,60 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link type="text/css" rel="stylesheet" href="styles.css">
 
+    <!-- ✅ Fix výšky -->
+    <style>
+        html, body, #root {
+          height: 100%;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+    </style>
+
+    <!-- ✅ Firebase SDK (compat verzie) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <!-- ✅ Inicializácia Firebase -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIbepq1zvkcVXo3sFHy8kSx3MB1M--A",
+            authDomain: "respirodesk.firebaseapp.com",
+            projectId: "respirodesk",
+            storageBucket: "respirodesk.appspot.com",
+            messagingSenderId: "119105448461",
+            appId: "1:119105448461:web:182e316e357ab41c58f664",
+            measurementId: "G-6NYA5BNTEN"
+        };
+
+        // Spustí Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Exportujeme auth a firestore pre window (aby ich vedela nájsť Kotlin app)
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+    </script>
+
+    <!-- ✅ Tvoja Kotlin/JS aplikácia -->
     <script type="application/javascript" src="composeApp.js" defer></script>
+
+    <!-- ✅ Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker
-                    .register('service-worker.js')
-                    .catch((error) => console.error('Service worker registration failed', error));
+                    .register('./service-worker.js')
+                    .then((reg) => {
+                        console.log('✅ Service Worker registered', reg);
+                    })
+                    .catch((error) => console.error('❌ Service Worker registration failed', error));
             });
         }
     </script>
 </head>
 <body>
-<!-- Toto je dôležité -->
 <div id="root"></div>
-
 <noscript>You need to enable JavaScript to run this app.</noscript>
 </body>
 </html>

@@ -69,8 +69,8 @@ fun AnamnezaScreen(snackbarHostState: SnackbarHostState) {
                 if (ger.isNotBlank()) append("$ger.")
 
                 // odstránenie nadbytočnej bodkočiarky na konci
-                if (endsWith("; ")) {
-                    delete(length - 2, length)
+                if (endsWith(", ")) {
+                    setLength(length - 2)
                     append(".")
                 }
             }

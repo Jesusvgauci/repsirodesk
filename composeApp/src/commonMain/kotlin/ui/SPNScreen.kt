@@ -9,6 +9,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.calculateSPN
 import kotlinx.coroutines.launch
+import utils.toFixed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +71,7 @@ fun SPNScreen() {
                         upperLobe,
                         spiculation
                     )
-                    result = "Riziko: ${"%.1f".format(res.probability)} % → ${res.category}"
+                    result = "Riziko: ${res.probability.toFixed(1)} % → ${res.category}"
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
