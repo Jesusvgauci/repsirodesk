@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import calculators.ABGAnalysisResult
 import calculators.analyzeABG
 import kotlinx.coroutines.launch
+import kotlin.math.pow
+import kotlin.math.round
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +45,7 @@ fun ABGScreen() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 🔹 InfoCard zo Components.kt (štýl podľa témy, nie ružová)
+            // 🔹 InfoCard zo Components.kt
             InfoCard(
                 text = "Interpretácia acidobázickej rovnováhy (ABR) je kalkulátor, ktorého cieľom je určiť, či má pacient poruchu pH vnútorného prostredia a aký je jej typ a závažnosť. Vyhodnocuje sa na základe výsledkov krvných plynov (pH, pCO₂, HCO₃⁻, BE) a často aj elektrolytov."
             )
@@ -125,16 +127,16 @@ fun ABGScreen() {
                         result = buildString {
                             appendLine("📌 Primárna porucha: ${res.primaryDisorder}")
                             res.expectedPaCO2_kPa?.let {
-                                appendLine("🌡 Očak. PaCO₂: ${"%.2f".format(it)} kPa")
+                                appendLine("🌡 Očak. PaCO₂: ${it.format(2)} kPa")
                             }
                             res.expectedHCO3?.let {
-                                appendLine("🧪 Očak. HCO₃⁻: ${"%.1f".format(it)} mmol/L")
+                                appendLine("🧪 Očak. HCO₃⁻: ${it.format(1)} mmol/L")
                             }
                             res.anionGap?.let {
-                                appendLine("🧮 Aniónová medzera: ${"%.1f".format(it)} mmol/L")
+                                appendLine("🧮 Aniónová medzera: ${it.format(1)} mmol/L")
                             }
                             res.anionGapCorrected?.let {
-                                appendLine("🧮 AG (korig.): ${"%.1f".format(it)} mmol/L")
+                                appendLine("🧮 AG (korig.): ${it.format(1)} mmol/L")
                             }
                             if (res.notes.isNotEmpty()) {
                                 appendLine("\nPoznámky:")
@@ -169,3 +171,9 @@ fun ABGScreen() {
 // Helper funkcia – tolerantná na bodku aj čiarku
 private fun parseDoubleOrNull(text: String): Double? =
     text.trim().replace(',', '.').toDoubleOrNull()
+
+// Multiplatform-friendly Double.format
+private fun Double.format(digits: Int): String {
+    val factor = 10.0.pow(digits)
+    return (round(this * factor) / factor).toString()
+}

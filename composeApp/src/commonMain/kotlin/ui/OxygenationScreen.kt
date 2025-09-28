@@ -9,6 +9,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.calculateSpO2FiO2
 import kotlinx.coroutines.launch
+import utils.toFixed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +55,7 @@ fun OxygenationScreen() {
                         spo2.toIntOrNull() ?: 95,
                         fio2.toDoubleOrNull() ?: 0.21
                     )
-                    result = "SpO₂/FiO₂ = ${"%.1f".format(res.ratio)} • ${res.interpretation}"
+                    result = "SpO₂/FiO₂ = ${res.ratio.toFixed(1)} • ${res.interpretation}"
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

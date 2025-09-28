@@ -1,7 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
@@ -9,62 +5,36 @@ plugins {
     alias(libs.plugins.composeHotReload)
 }
 
-kotlin {
-    jvm()
+repositories {
+    mavenCentral()
+    google()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+}
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        outputModuleName.set("composeApp")
+kotlin {
+    js(IR) {
         browser {
-            val rootDirPath = project.rootDir.path
-            val projectDirPath = project.projectDir.path
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(rootDirPath)
-                        add(projectDirPath)
-                    }
-                }
-            }
+            commonWebpackConfig { outputFileName = "composeApp.js" }
         }
         binaries.executable()
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(compose.materialIconsExtended)
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+        val commonMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+            }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        val commonTest by getting {
+            dependencies { implementation(libs.kotlin.test) }
         }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
-            implementation("org.jetbrains.compose.ui:ui-desktop:1.8.2")
+        val jsMain by getting {
+            dependencies {
+                implementation(compose.html.core) // Compose Web DOM
+            }
         }
-    }
-}
-
-compose.desktop {
-    application {
-        // ⚠️ Tu je opravená mainClass podľa tvojho balíka
-        mainClass = "org.example.pneumocalc.MainKt"
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "PneumoCalc"
-            packageVersion = "1.0.0"
-        }
+        val jsTest by getting
     }
 }

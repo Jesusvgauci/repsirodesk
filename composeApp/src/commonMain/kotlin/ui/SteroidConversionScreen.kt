@@ -9,6 +9,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import calculators.convertSteroid
 import kotlinx.coroutines.launch
+import utils.toFixed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +132,7 @@ fun SteroidScreen() {
                     val dose = inputDose.toDoubleOrNull()
                     result = if (dose != null && dose > 0) {
                         val converted = convertSteroid(inputDrug, dose, outputDrug)
-                        "%.1f mg %s ≈ %.1f mg %s".format(dose, inputDrug, converted, outputDrug)
+                        "${dose.toFixed(1)} mg $inputDrug ≈ ${converted.toFixed(1)} mg $outputDrug"
                     } else {
                         "Zadajte platnú dávku."
                     }
