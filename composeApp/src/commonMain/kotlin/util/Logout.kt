@@ -1,6 +1,3 @@
-package ui
+package util
 
-import androidx.compose.runtime.Composable
-
-@Composable
-expect fun Logout(onLogout: () -> Unit)
+expect fun logout(callback: () -> Unit)

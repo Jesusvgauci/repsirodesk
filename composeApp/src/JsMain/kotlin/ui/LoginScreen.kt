@@ -17,7 +17,9 @@ actual fun LoginScreen(onLoginSuccess: (String) -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -30,6 +32,11 @@ actual fun LoginScreen(onLoginSuccess: (String) -> Unit) {
                 scope.launch {
                     try {
                         val auth = window.asDynamic().auth
+                        if (auth == null) {
+                            error = "Firebase Auth nie je inicializované"
+                            return@launch
+                        }
+
                         val provider = js("new firebase.auth.GoogleAuthProvider()")
 
                         auth.signInWithPopup(provider).then { result: dynamic ->
@@ -39,19 +46,20 @@ actual fun LoginScreen(onLoginSuccess: (String) -> Unit) {
 
                             // uloženie do Firestore
                             val db = window.asDynamic().db
-                            db.collection("users").doc(user.uid).set(
-                                js(
-                                    """({
-                                        email: "${'$'}email",
-                                        name: "${'$'}{user.displayName}",
-                                        role: "basic",
-                                        createdAt: new Date()
-                                    })"""
+                            if (db != null) {
+                                db.collection("users").doc(user.uid).set(
+                                    js(
+                                        """({
+                                            email: "${'$'}email",
+                                            name: "${'$'}{user.displayName}",
+                                            role: "basic",
+                                            createdAt: new Date()
+                                        })"""
+                                    )
                                 )
-                            )
-
+                            }
                         }.catch { e: dynamic ->
-                            error = e.message as String
+                            error = e.message as? String ?: "Neznáma chyba"
                         }
                     } catch (e: Throwable) {
                         error = e.message ?: "Neznáma chyba"

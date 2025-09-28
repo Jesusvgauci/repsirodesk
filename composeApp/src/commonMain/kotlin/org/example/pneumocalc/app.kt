@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.reflect.KClass
 import ui.*
-import util.logout
+import util.*
 
 // Sekcie aplikácie
 enum class MainSection(val title: String) {

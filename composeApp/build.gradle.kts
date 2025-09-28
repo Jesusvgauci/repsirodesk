@@ -1,6 +1,4 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -12,21 +10,10 @@ plugins {
 kotlin {
     jvm()
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        outputModuleName.set("composeApp")
+    js(IR) {
         browser {
-            val rootDirPath = project.rootDir.path
-            val projectDirPath = project.projectDir.path
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        // Serve sources to debug inside browser
-                        add(rootDirPath)
-                        add(projectDirPath)
-                    }
-                }
             }
         }
         binaries.executable()
@@ -44,7 +31,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.materialIconsExtended)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
-            implementation("org.jetbrains.kotlinx:kotlinx-browser:0.3.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -52,14 +38,15 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-            implementation("org.jetbrains.compose.ui:ui-desktop:1.8.2")
+        }
+        jsMain.dependencies {
+            // nič špeciálne netreba – window/document sú v stdlib
         }
     }
 }
 
 compose.desktop {
     application {
-        // ⚠️ Tu je opravená mainClass podľa tvojho balíka
         mainClass = "org.example.pneumocalc.MainKt"
 
         nativeDistributions {
