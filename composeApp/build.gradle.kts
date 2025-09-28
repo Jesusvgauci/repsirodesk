@@ -1,5 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
@@ -7,52 +5,36 @@ plugins {
     alias(libs.plugins.composeHotReload)
 }
 
-kotlin {
-    jvm()
+repositories {
+    mavenCentral()
+    google()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+}
 
+kotlin {
     js(IR) {
         browser {
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-            }
+            commonWebpackConfig { outputFileName = "composeApp.js" }
         }
         binaries.executable()
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(compose.materialIconsExtended)
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+        val commonMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+            }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        val commonTest by getting {
+            dependencies { implementation(libs.kotlin.test) }
         }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
+        val jsMain by getting {
+            dependencies {
+                implementation(compose.html.core) // Compose Web DOM
+            }
         }
-        jsMain.dependencies {
-            // nič špeciálne netreba – window/document sú v stdlib
-        }
-    }
-}
-
-compose.desktop {
-    application {
-        mainClass = "org.example.pneumocalc.MainKt"
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "PneumoCalc"
-            packageVersion = "1.0.0"
-        }
+        val jsTest by getting
     }
 }
